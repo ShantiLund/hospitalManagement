@@ -1,0 +1,35 @@
+{
+  "name": "hospital",
+  "version": "1.0.0",
+  "description": "This is server for our hospital management portal which will provide responses to all the REST API for frontend portals",
+  "main": "index.js",
+  "scripts": {
+    "test": "node src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShantiLund/hospitalManagement.git"
+  },
+  "keywords": [
+    "server",
+    "node",
+    "hospital"
+  ],
+  "author": "Shanti",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShantiLund/hospitalManagement/issues"
+  },
+  "homepage": "https://github.com/ShantiLund/hospitalManagement#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.5.7",
+    "multer": "^1.4.2",
+    "nodemailer": "^6.4.6",
+    "validator": "^13.0.0"
+  }
+}
