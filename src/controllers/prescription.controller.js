@@ -52,26 +52,46 @@ exports.create = (req, res) => {
     });
 };
 
-exports.upload = (upload.single('path'), function(req, res) {
+exports.upload = (upload.single('link'), function(req, res) {
     imagePath=req.file.path;
-    finalPath="localhost:3000/"+imagePath+req.param.email;
+   const finalPath="localhost:3000/"+imagePath+req.params.email;
    
- //create a prescription image
-const uploadImage=new uploadVideo({
-   email:req.param.email,
-   path:finalPath
-
-
-});
-//save uploaded image path  in the database.
-uploadImage.save()
-.then(data => {
-   res.send(data);
-}).catch(err => {
-   res.status(500).send({
-      message: err.message || "Some error occurred while uploading the image."
-   });
-});
+    Prescription.findByIdAndUpdate(req.params.email, {
+       
+        email: req.param.email,
+        path: finalPath
+        
+    }, {new: true})
+    .then(prescription => {
+        if(!prescription) {
+            const prescription = new Prescription({
+               
+                email: req.params.email,
+                path:finalPath
+                
+            });
+        
+            // Save prescription in the database
+            prescription.save()
+            .then(data => {
+                res.send(data);
+            }).catch(err => {
+                res.status(500).send({
+                    message: err.message || "Some error occurred while creating the prescription."
+                });
+            });
+        }
+        res.send(prescription);
+    }).catch(err => {
+        if(err.kind === 'ObjectId') {
+            return res.status(404).send({
+                message: "prescription not found with email " + req.params.email
+            });                
+        }
+        return res.status(500).send({
+            message: "Error updating prescription with email " + req.params.email
+        });
+    });
 
 
 });

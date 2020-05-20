@@ -23,7 +23,7 @@ const PrescriptionSchema = mongoose.Schema({
         trim:true
 
     },
-   path:{
+   link:{
         type:String,
         required:true,
         trim:true

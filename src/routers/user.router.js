@@ -1,7 +1,12 @@
 const express = require('express')
 const User = require('../models/user.model')
+const Doctor = require('../models/doctor.model')
+const Patient = require('../models/patient.model')
 const auth = require('../middleware/auth')
 const adminAuth=require('../middleware/AdminAuth')
+var nodemailer = require('nodemailer');
+var hbs=require('nodemailer-express-handlebars');
+const bcrypt = require('bcryptjs')
 // var nodemailer = require('nodemailer');
 // var hbs=require('nodemailer-express-handlebars');
 // const bcrypt = require('bcryptjs')
@@ -14,26 +19,92 @@ router.get('/', async(req, res)=>{
     res.status(201).send("Server running");
 });
 router.post('/users/signup', async (req, res) => {    
-    try{ console.log(req.body);  
-        const user=new User(req.body);
+    try{ const email=req.body.email;
+        const path='http://localhost:3000/user/varification';
+        if(req.body.role==='Doctor'){
+            try{
+                console.log("I am doctor to signup here")
+		   //Saving data to doctor database
+                const doctor= new Doctor({
+                    doctorEmail:req.body.email,
+                    name:req.body.name,
+                    role:req.body.role,
+                    contactNumber:req.body.contactNumber,
+                    specialization:req.body.specialization
+                });
+                await doctor.save()
+              
+ 		//saving data to user database
+                //console.log("user is customer");
+                const user = new User({
+                    email:req.body.email,
+                    password:req.body.password,
+                    role:req.body.role,
+                     varified:false,
+                   
+                });
                 await user.save()
                
                 //console.log("user is here"+user);
                 const token = await user.generateAuthToken();
                 //console.log("token is "+token);
                
-               
-               res.status(200).send(user);
-                
-            } catch (error) {
+                sendVarificationEmail(email,path);
+               // console.log("verified user is "+user.varified);
+               res.status(401).send({message: 'Verification email has been sent you account!! Kindly verify it'})
+             
+            } 
+            catch (error) {
                 console.log(error)
                 res.status(400).send(error)
             }
-        
-        });
+
+        } else {
+            console.log("Here");
+            try{
+                
+                //Saving data to Patient database
+                     const patient= new Patient({
+                         patientEmail:req.body.email,
+                         name:req.body.name,
+                         role:req.body.role,
+                         contactNumber:req.body.contactNumber,
+                         
+                     });
+                     await patient.save()
+                    
+              //saving data to user database
+                     //console.log("user is customer");
+                     const user = new User({
+                         email:req.body.email,
+                         password:req.body.password,
+                         role:req.body.role,
+                          varified:false,
+                        
+                     });
+                     await user.save()
+                    
+                     //console.log("user is here"+user);
+                     const token = await user.generateAuthToken();
+                     //console.log("token is "+token);
+                    
+                     sendVarificationEmail(email,path);
+                    // console.log("verified user is "+user.varified);
+                    res.status(401).send({message: 'Verification email has been sent you account!! Kindly verify it'})
+                     
+                 } catch (error) {
+                     console.log(error)
+                     res.status(400).send(error)
+                 }
+        }
+    }
+    catch(error){
+        res.status(400).send(error)
+    }
+});
+
 router.post('/admin/getAll', adminAuth,async (req, res) => {
-  // res.send(req.body.role)
-  // console.log('here');
+  //Admin can view all doctors or patient that are registered to the app by defining the role as patient or doctor
    User.find({role:req.body.role})
     
     .then(user => {
@@ -102,216 +173,216 @@ router.post('/users/me/logoutall', auth, async(req, res) => {
     }
 });
 
-// router.post('/user/forgotPassword', async(req,res)=>{
-//     try{
+router.post('/user/forgotPassword', async(req,res)=>{
+    try{
        
-//         const email=req.body.email;
-//         console.log(req.body.email);
-//         var path='http://localhost:3000/user/activateNewPassword';
-//       const  pass = await bcrypt.hash(req.body.newPassword,8)
-//        // console.log(pass);
-//        User.findOneAndUpdate({email:req.body.email}, {
-//             newPassword:pass
-//         }, {new: true})
-//         .then(user => {
-//             if(!user) {
-//                 return res.status(404).send({
-//                     message: "Not Varfied user.  " + req.body.email
-//                 });
-//             }
-//            sendVarificationEmail(email,path)
-//            res.send({message: 'Verification email has been sent you account!! Kindly verify it'})
+        const email=req.body.email;
+        console.log(req.body.email);
+        var path='http://localhost:3000/user/activateNewPassword';
+      const  pass = await bcrypt.hash(req.body.newPassword,8)
+       // console.log(pass);
+       User.findOneAndUpdate({email:req.body.email}, {
+            newPassword:pass
+        }, {new: true})
+        .then(user => {
+            if(!user) {
+                return res.status(404).send({
+                    message: "Not Varfied user.  " + req.body.email
+                });
+            }
+           sendVarificationEmail(email,path)
+           res.send({message: 'Verification email has been sent you account!! Kindly verify it'})
             
             
-//         }).catch(err => {
-//             if(err.kind === 'ObjectId') {
-//                 return res.status(404).send({
-//                     message: "Not Varified User " + req.params.email
-//                 });                
-//             }
-//             return res.status(500).send({
-//                 message: "Error updating Verified variable " });
-//         });
+        }).catch(err => {
+            if(err.kind === 'ObjectId') {
+                return res.status(404).send({
+                    message: "Not Varified User " + req.params.email
+                });                
+            }
+            return res.status(500).send({
+                message: "Error updating Verified variable " });
+        });
 
-//     }
-//     catch(error)
-//     {
-//         console.log(error);
+    }
+    catch(error)
+    {
+        console.log(error);
 
-//     }
+    }
    
 
-// });
+});
 
-// router.post('/user/changePassword/:email',async(req,res)=>{
-//     try{
+router.post('/user/changePassword/:email',async(req,res)=>{
+    try{
 
        
-//             const email=req.params.email;
-//             const password=req.body.password;
-//            const newPass = await bcrypt.hash(req.body.newPassword, 8)
-//             const user = await User.findByCredentials(email, password);
-//         if(user)
-//         {
-//             user.password=req.body.newPassword;
+            const email=req.params.email;
+            const password=req.body.password;
+           const newPass = await bcrypt.hash(req.body.newPassword, 8)
+            const user = await User.findByCredentials(email, password);
+        if(user)
+        {
+            user.password=req.body.newPassword;
            
 
-//         }
-//         await user.save();
-//        res.send(user);
+        }
+        await user.save();
+       res.send(user);
     
 
         
 
-//        }
-//     catch(error)
-//     {
-//         console.log(error);
-//     }
+       }
+    catch(error)
+    {
+        console.log(error);
+    }
 
-// });
-// router.get('/user/varification/:email',async(req, res) =>{
+});
+router.get('/user/varification/:email',async(req, res) =>{
     
-//     try{
-//        // console.log("recieve email"+req.params.email);
-//         User.findOneAndUpdate({email:req.params.email}, {
-//             name: "Hello",
-//             varified: true
-//         }, {new: true})
-//         .then(user => {
-//             if(!user) {
-//                 return res.status(404).send({
-//                     message: "Not Varfied user.  " + req.params.email
-//                 });
-//             }
-//             res.send(user)
+    try{
+       // console.log("recieve email"+req.params.email);
+        User.findOneAndUpdate({email:req.params.email}, {
+            name: "Hello",
+            varified: true
+        }, {new: true})
+        .then(user => {
+            if(!user) {
+                return res.status(404).send({
+                    message: "Not Varfied user.  " + req.params.email
+                });
+            }
+            res.send(user)
             
-//         }).catch(err => {
-//             if(err.kind === 'ObjectId') {
-//                 return res.status(404).send({
-//                     message: "Not Varified User " + req.params.email
-//                 });                
-//             }
-//             return res.status(500).send({
-//                 message: "Error updating Verified variable " });
-//         });
+        }).catch(err => {
+            if(err.kind === 'ObjectId') {
+                return res.status(404).send({
+                    message: "Not Varified User " + req.params.email
+                });                
+            }
+            return res.status(500).send({
+                message: "Error updating Verified variable " });
+        });
        
-//     }
-//     catch(error)
-//     {
-//         console.log(error);
+    }
+    catch(error)
+    {
+        console.log(error);
 
-//     }
+    }
   
     
   
-// });
+});
 
-// router.get('/user/activateNewPassword/:email', async (req, res) =>{
-//     //console.log("Activation here Email recieved is"+ req.params.email);
+router.get('/user/activateNewPassword/:email', async (req, res) =>{
+    //console.log("Activation here Email recieved is"+ req.params.email);
     
-//    try{
-//     var newPass="";
-//   await User.find({email:req.params.email})
-//     .then(user => {
-//         if(!user) {
-//             return res.status(404).send({
-//                 message: "User not found with email " + req.params.email
-//             });            
-//         }
-//        newPass=user[0]["newPassword"];
-//        console.log("new Password is "+newPass);
-//           });
+   try{
+    var newPass="";
+  await User.find({email:req.params.email})
+    .then(user => {
+        if(!user) {
+            return res.status(404).send({
+                message: "User not found with email " + req.params.email
+            });            
+        }
+       newPass=user[0]["newPassword"];
+       console.log("new Password is "+newPass);
+          });
 
-//           User.findOneAndUpdate({email:req.params.email}, {
-//             password: newPass,
-//         }, {new: true})
-//         .then(user => {
-//             if(!user) {
-//                 return res.status(404).send({
-//                     message: "Not Varfied user.  " + req.params.email
-//                 });
-//             }
-//             res.send(user)
+          User.findOneAndUpdate({email:req.params.email}, {
+            password: newPass,
+        }, {new: true})
+        .then(user => {
+            if(!user) {
+                return res.status(404).send({
+                    message: "Not Varfied user.  " + req.params.email
+                });
+            }
+            res.send(user)
         
-//         });
+        });
 
 
    
-//      } catch(error){
-//        console.log(error);
-//    }
+     } catch(error){
+       console.log(error);
+   }
 
-// });
-// function sendVarificationEmail(email,path)
-// {    //console.log("Email is "+email);
-//      //console.log("Path is"+path);
-//     try{
+});
+function sendVarificationEmail(email,path)
+{    //console.log("Email is "+email);
+     //console.log("Path is"+path);
+    try{
 
-//         //var user_email_address=email;
-//         //console.log('user email is'+email);
+        //var user_email_address=email;
+        //console.log('user email is'+email);
         
-//          const address=`${path}/${email}`;
-//         //console.log(address);
-//          var transporter=nodemailer.createTransport({
-//         service:'gmail',
-//         host: "smtp.gmail.com",
+         const address=`${path}/${email}`;
+        //console.log(address);
+         var transporter=nodemailer.createTransport({
+        service:'gmail',
+        host: "smtp.gmail.com",
   
     
-//         auth:{
+        auth:{
             
-//                 type: "OAuth2",
-//                 user:'shanti.cs15@iba-suk.edu.pk',
-//                 clientId:'462013622902-t8g5jm0kljreudaghm6efohnk62p9mkq.apps.googleusercontent.com',
-//                 clientSecret:'LgRxv5c29xJRra1x25Sq5olG',
-//                 refreshToken:'1//04B-Kmaq7MkKzCgYIARAAGAQSNwF-L9IrFCpJDBbCjPT1uzKFv28vojJK-QYE8Zf3YVq6yOy6VnIRh0_JdrmGz3xVh4PElRIfcks'
+                type: "OAuth2",
+                user:'shanti.cs15@iba-suk.edu.pk',
+                clientId:'462013622902-t8g5jm0kljreudaghm6efohnk62p9mkq.apps.googleusercontent.com',
+                clientSecret:'LgRxv5c29xJRra1x25Sq5olG',
+                refreshToken:'1//04B-Kmaq7MkKzCgYIARAAGAQSNwF-L9IrFCpJDBbCjPT1uzKFv28vojJK-QYE8Zf3YVq6yOy6VnIRh0_JdrmGz3xVh4PElRIfcks'
             
            
-//         }
+        }
        
-//     });
+    });
 
-//     const handlebarOptions = {
-//         viewEngine: {
-//           extName: '.hbs',
-//           partialsDir: 'src/views',
-//           layoutsDir: 'src/views',
-//           defaultLayout: 'index.hbs',
-//         },
-//         viewPath: 'src/views',
-//         extName: '.hbs',
-//       };
+    const handlebarOptions = {
+        viewEngine: {
+          extName: '.hbs',
+          partialsDir: 'src/views',
+          layoutsDir: 'src/views',
+          defaultLayout: 'index.hbs',
+        },
+        viewPath: 'src/views',
+        extName: '.hbs',
+      };
       
-//       transporter.use('compile', hbs(handlebarOptions));
-//     var mailOptions={
-//         from: 'Shanti <shanti.cs15@iba-suk.edu.pk>',
-//         to:  email,
-//         subject: 'Sending Email using Node js',
-//         template:' ',
-//         context:{
-//             url:`${address}`
+      transporter.use('compile', hbs(handlebarOptions));
+    var mailOptions={
+        from: 'Shanti <shanti.cs15@iba-suk.edu.pk>',
+        to:  email,
+        subject: 'Sending Email using Node js',
+        template:'index',
+        context:{
+            url:`${address}`
             
-//         }
-//         //html: `<a href="${url}">http://localhost:3000/user/varification/</a>`
+        }
+        //html: `<a href="${url}">http://localhost:3000/user/varification/</a>`
         
-//     };
-//     transporter.sendMail(mailOptions,function(error,info){
-//         if(error)
-//         {
-//             console.log(error);
-//         }
-//         else
-//         {
-//             console.log('Email Sent'+info.response)
-//         }
-//     })
+    };
+    transporter.sendMail(mailOptions,function(error,info){
+        if(error)
+        {
+            console.log(error);
+        }
+        else
+        {
+            console.log('Email Sent'+info.response)
+        }
+    })
 
 
-//       }catch(error)
-//     {
-//             res.send(error)
-//     }
+      }catch(error)
+    {
+            res.send(error)
+    }
     
-// }
+}
 
 module.exports = router

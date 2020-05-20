@@ -5,10 +5,11 @@ exports.create = (req, res) => {
    
 
     // Create a Appointment
+    
+    console.log(req.body);
     const appointment = new Appointment({
         appoint_id: req.body.appoint_id , 
-        email: req.body.email,
-        DocName:req.body.DocName,
+        email:req.body.email,
         date: req.body.date,
         time: req.body.time
 
@@ -24,6 +25,7 @@ exports.create = (req, res) => {
             message: err.message || "Some error occurred while creating the Course."
         });
     });
+    
 };
 
 // Retrieve and return all appointments from the database.
@@ -62,8 +64,9 @@ exports.findOne = (req, res) => {
 
 // Update a course identified by the AppointmentId in the request
 exports.update = (req, res) => {
+    console.log(req.params.appoint_id);
     // Find Appointment and update it with the request body
-    Appointment.findByIdAndUpdate(req.params.appoint_id, {
+    Appointment.findOneAndUpdate({appoint_id:req.params.appoint_id}, {
        
         email: req.body.email,
         date: req.body.date,
@@ -72,29 +75,29 @@ exports.update = (req, res) => {
     .then(appointment => {
         if(!appointment) {
             return res.status(404).send({
-                message: "Course not found with id " + req.params.appoint_id
+                message: "Appoint not found with id " + req.params.appoint_id
             });
         }
         res.send(appointment);
     }).catch(err => {
         if(err.kind === 'ObjectId') {
             return res.status(404).send({
-                message: "Course not found with id " + req.params.appoint_id
+                message: "Appoint not found with id " + req.params.appoint_id
             });                
         }
         return res.status(500).send({
-            message: "Error updating course with id " + req.params.appoint_id
+            message: "Error updating Appoint with id " + req.params.appoint_id
         });
     });
 };
 
 // Delete a Appointment with the specified courseId in the request
 exports.delete = (req, res) => {
-    Appointment.findByIdAndRemove(req.params.appoint_id)
+    Appointment.findOneAndRemove({appoint_id:req.params.appoint_id})
     .then(appointment => {
         if(!appointment) {
             return res.status(404).send({
-                message: "Course not found with id " + req.params.appoint_id
+                message: "Appointment not found with id " + req.params.appoint_id
             });
         }
         res.send({message: "Appointment deleted successfully!"});

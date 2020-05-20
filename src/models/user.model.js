@@ -41,6 +41,7 @@ const userSchema = mongoose.Schema({
         required:false,
         trim:true
     },
+    
     varified:
     {
         type:Boolean,

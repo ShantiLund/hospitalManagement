@@ -1,0 +1,82 @@
+{
+	"info": {
+		"_postman_id": "269047d4-a9d5-44fc-8675-12eb1f1b5dc8",
+		"name": "Prescription",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item":  [
+		
+		{
+			"name": "Add prescription New Record",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"prescription_id\": \"001\",\n\t\"email\": \"Patient email\",\n\t\"pres_expiry_Date\": \"sampleDate\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/prescription/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"prescription",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"appoint_id\": \"001\",\n\t\"email\": \"Patient email\",\n\t\"date\": \"sampleDate\"\n\n\t\"DoctorName\": \"sampleDoctorName\"\n\n\t\"time\": \"sampleTime\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/appointment/update",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"appointment",
+						"update"
+					]
+				}
+			},
+			"response": []
+		}],
+	"protocolProfileBehavior": {}
+}

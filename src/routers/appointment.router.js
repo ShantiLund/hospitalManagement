@@ -5,7 +5,7 @@ const router = express.Router();
     // Create a new appointment
     router.post('/appointment/create', ApponitmentController.create);
 
-    // Retrieve all appointments
+    // view all appointments
     router.get('/appointments', ApponitmentController.findAll);
 
     // Retrieve a single appointment with appont_id

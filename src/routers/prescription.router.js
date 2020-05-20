@@ -6,6 +6,6 @@ const router = express.Router();
     router.post('/prescription/create', PrescriptionController.create);
 
     // Upload prescription image uploaded by the patient
-    router.delete('/prescription/upload/:email', PrescriptionController.upload);
+    router.post('/prescription/upload/:email', PrescriptionController.upload);
 
     module.exports = router;
